@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import API from "../services/api";
 import { 
   BarChart3, 
   Briefcase, 
@@ -31,7 +31,7 @@ const Analytics = () => {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const response = await axios.get("/api/interviews/analytics");
+        const response = await API.get("/interviews/analytics");
         if (response.data.success) {
           setData(response.data.analytics);
         } else {
