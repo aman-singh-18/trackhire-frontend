@@ -1,37 +1,52 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import API from "../services/api";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Building2, Briefcase, Calendar, FileText, ArrowLeft, Save } from "lucide-react";
+import { Building2, Briefcase, Calendar, FileText, ArrowLeft, Save, FileCheck } from "lucide-react";
 
 const AddInterview = () => {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
+  const [resumePool, setResumePool] = useState([]); // Stores the user's available resumes list
   
-  // Set initial states to map cleanly with your Mongoose schema parameters
   const [formData, setFormData] = useState({
     company: "",
     role: "",
     status: "Applied",
-    appliedDate: new Date().toISOString().split("T")[0], // Defaults to today's date format (YYYY-MM-DD)
+    appliedDate: new Date().toISOString().split("T")[0],
     notes: "",
+    taskDate: "",
+    resumePath: "", // Stores the selected resume path string from repository pool
   });
+
+  // Fetch the available resume list when the form workspace initializes
+  useEffect(() => {
+    const fetchResumes = async () => {
+      try {
+        const res = await API.get("/auth/resumes");
+        if (res.data.success) {
+          setResumePool(res.data.resumes);
+        }
+      } catch (err) {
+        console.error("Could not load repository resumes pool options.");
+      }
+    };
+    fetchResumes();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
 
     try {
-      // Send data to your POST controller route: /api/interviews
+      // Sent cleanly as a regular standard JSON payload object!
       const res = await API.post("/interviews", formData);
-      
       if (res.data.success) {
         toast.success("Application tracked successfully!");
-        navigate("/"); // Send the user back to the updated dashboard feed
+        navigate("/");
       }
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create application entry");
-      console.error(err);
     } finally {
       setSubmitting(false);
     }
@@ -39,7 +54,6 @@ const AddInterview = () => {
 
   return (
     <div className="p-6 max-w-2xl mx-auto selection:bg-indigo-500 selection:text-white">
-      {/* Back button link */}
       <button 
         onClick={() => navigate("/")}
         className="flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-white transition-colors mb-6 group"
@@ -55,7 +69,6 @@ const AddInterview = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {/* Company Input */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Company Name</label>
               <div className="relative">
@@ -64,14 +77,13 @@ const AddInterview = () => {
                   type="text"
                   required
                   placeholder="e.g., Google"
-                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all"
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                 />
               </div>
             </div>
 
-            {/* Role Title Input */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Job Title / Role</label>
               <div className="relative">
@@ -80,7 +92,7 @@ const AddInterview = () => {
                   type="text"
                   required
                   placeholder="e.g., SDE Intern"
-                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all"
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 />
@@ -89,11 +101,10 @@ const AddInterview = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {/* Status Dropdown selector */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Application Status</label>
               <select
-                className="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 px-4 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                className="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 px-4 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-all"
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
               >
@@ -105,7 +116,6 @@ const AddInterview = () => {
               </select>
             </div>
 
-            {/* Applied Date Field Selector */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Date Applied</label>
               <div className="relative">
@@ -113,12 +123,52 @@ const AddInterview = () => {
                 <input
                   type="date"
                   required
-                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all scheme-dark"
+                  className="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all scheme-dark"
                   value={formData.appliedDate}
                   onChange={(e) => setFormData({ ...formData, appliedDate: e.target.value })}
                 />
               </div>
             </div>
+          </div>
+
+          {/* Task Scheduler Input Section */}
+          <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Calendar className="w-4 h-4 text-indigo-400" />
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Set Reminder / Deadline Milestone (Optional)
+              </label>
+            </div>
+            <div className="relative">
+              <input
+                type="date"
+                className="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all scheme-dark"
+                value={formData.taskDate}
+                onChange={(e) => setFormData({ ...formData, taskDate: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* --- NEW RESUME POOL SELECTION DROPDOWN FIELD --- */}
+          <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <FileCheck className="w-4 h-4 text-indigo-400" />
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Link Resume From Repository Pool
+              </label>
+            </div>
+            <select
+              className="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 px-4 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-all"
+              value={formData.resumePath}
+              onChange={(e) => setFormData({ ...formData, resumePath: e.target.value })}
+            >
+              <option value="">-- Select No Resume Linked --</option>
+              {resumePool.map((res) => (
+                <option key={res._id} value={res.filePath}>
+                  {res.title}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Notes Textarea Field */}
@@ -128,19 +178,18 @@ const AddInterview = () => {
               <FileText className="absolute left-3 top-4 w-4 h-4 text-slate-500" />
               <textarea
                 rows="4"
-                placeholder="Include details like salary range, interview rounds, dynamic link, or preparation strategy tokens..."
-                className="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all resize-none"
+                placeholder="Include preparation strategies, salary range token data parameters..."
+                className="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all resize-none"
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               />
             </div>
           </div>
 
-          {/* Submission CTA */}
           <button
             type="submit"
             disabled={submitting}
-            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-6 rounded-xl shadow-lg shadow-indigo-600/10 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 ml-auto"
+            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-6 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 ml-auto"
           >
             <Save className="w-4 h-4" /> {submitting ? "Saving Entry..." : "Save Application"}
           </button>

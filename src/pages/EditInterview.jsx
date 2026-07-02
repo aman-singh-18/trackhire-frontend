@@ -2,47 +2,59 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
-import { Building2, Briefcase, Calendar, FileText, ArrowLeft, RefreshCw } from "lucide-react";
+import { Building2, Briefcase, Calendar, FileText, ArrowLeft, RefreshCw, FileCheck } from "lucide-react";
 
 const EditInterview = () => {
-  const { id } = useParams(); // Extracts the unique MongoDB ID from the URL path string
+  const { id } = useParams();
   const navigate = useNavigate();
   
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [resumePool, setResumePool] = useState([]); // Stores repository pool list array
+  
   const [formData, setFormData] = useState({
     company: "",
     role: "",
     status: "Applied",
     appliedDate: "",
     notes: "",
+    taskDate: "",
+    resumePath: "", // Selected resume path hook parameter
   });
 
-  // Fetch the existing document value parameters when the page loads
   useEffect(() => {
-    const fetchInterviewDetails = async () => {
+    const fetchInitialData = async () => {
       try {
-        // Calls your backend route: GET /api/interviews/:id
-        const res = await API.get(`/interviews/${id}`);
-        if (res.data.success) {
-          const item = res.data.interview;
+        // 1. Concurrent fetching pool options and existing details parameters
+        const [interviewRes, resumePoolRes] = await Promise.all([
+          API.get(`/interviews/${id}`),
+          API.get("/auth/resumes")
+        ]);
+
+        if (resumePoolRes.data.success) {
+          setResumePool(resumePoolRes.data.resumes);
+        }
+
+        if (interviewRes.data.success) {
+          const item = interviewRes.data.interview;
           setFormData({
             company: item.company,
             role: item.role,
             status: item.status,
-            // Format Mongo Date string back into calendar default format: YYYY-MM-DD
             appliedDate: new Date(item.appliedDate).toISOString().split("T")[0],
-            notes: item.notes,
+            notes: item.notes || "",
+            taskDate: item.taskDate ? new Date(item.taskDate).toISOString().split("T")[0] : "",
+            resumePath: item.resumePath || "",
           });
         }
       } catch (err) {
         toast.error("Failed to load application details");
         navigate("/");
-      } finally {
+      } {
         setLoading(false);
       }
     };
-    fetchInterviewDetails();
+    fetchInitialData();
   }, [id, navigate]);
 
   const handleSubmit = async (e) => {
@@ -50,11 +62,14 @@ const EditInterview = () => {
     setUpdating(true);
 
     try {
-      // Calls your backend update handler route: PUT /api/interviews/:id
-      const res = await API.put(`/interviews/${id}`, formData);
+      const payload = { ...formData };
+      if (!payload.taskDate) payload.taskDate = null;
+
+      // Sent as standard application/json payload parameters mapping smoothly!
+      const res = await API.put(`/interviews/${id}`, payload);
       if (res.data.success) {
         toast.success("Application card updated!");
-        navigate("/"); // Send user back to home viewport layout
+        navigate("/");
       }
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to modify entry data structure");
@@ -146,6 +161,46 @@ const EditInterview = () => {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Modify Task Scheduler input group */}
+          <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-5 my-2">
+            <div className="flex items-center gap-2 mb-3">
+              <Calendar className="w-4 h-4 text-indigo-400" />
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Modify Milestone Reminder (Optional)
+              </label>
+            </div>
+            <div className="relative">
+              <input
+                type="date"
+                className="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all scheme-dark"
+                value={formData.taskDate}
+                onChange={(e) => setFormData({ ...formData, taskDate: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* Update Resume Selection Droplist */}
+          <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <FileCheck className="w-4 h-4 text-indigo-400" />
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Update Linked Resume Asset
+              </label>
+            </div>
+            <select
+              className="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 px-4 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-all"
+              value={formData.resumePath}
+              onChange={(e) => setFormData({ ...formData, resumePath: e.target.value })}
+            >
+              <option value="">-- Select No Resume Linked --</option>
+              {resumePool.map((res) => (
+                <option key={res._id} value={res.filePath}>
+                  {res.title}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

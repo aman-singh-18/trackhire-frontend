@@ -9,6 +9,7 @@ import AddInterview from "./pages/AddInterview";
 import EditInterview from "./pages/EditInterview";
 import ViewInterview from "./pages/ViewInterview";
 import Analytics from "./pages/Analytics";
+import ManageResumes from "./pages/ManageResumes";
 
 // Import Shared Architecture Components
 import Layout from "./components/Layout";
@@ -46,6 +47,7 @@ function App() {
           <Route path="/edit/:id" element={<EditInterview />} />
           <Route path="/view/:id" element={<ViewInterview />} />
           <Route path="/analytics" element={<Analytics />} />
+          <Route path="/resumes" element={<ManageResumes />} />
         </Route>
 
         {/* Fallback Protection Route */}

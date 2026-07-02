@@ -1,1 +1,72 @@
 @import "tailwindcss";
+/* Custom CSS Layout Mapping for parsed Markdown Content elements */
+.MarkdownWorkspace h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+.MarkdownWorkspace h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-top: 14px;
+  margin-bottom: 6px;
+}
+
+.MarkdownWorkspace p {
+  margin-bottom: 12px;
+  color: #cbd5e1;
+}
+
+.MarkdownWorkspace ul, .MarkdownWorkspace ol {
+  padding-left: 20px;
+  margin-bottom: 12px;
+  list-style-type: disc;
+}
+
+.MarkdownWorkspace ol {
+  list-style-type: decimal;
+}
+
+.MarkdownWorkspace li {
+  margin-bottom: 4px;
+  color: #cbd5e1;
+}
+
+.MarkdownWorkspace code {
+  background-color: #1e293b;
+  color: #f43f5e;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.MarkdownWorkspace pre {
+  background-color: #020617;
+  border: 1px solid #1e293b;
+  padding: 16px;
+  border-radius: 12px;
+  overflow-x: auto;
+  margin: 14px 0;
+}
+
+.MarkdownWorkspace pre code {
+  background-color: transparent;
+  color: #38bdf8;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+.MarkdownWorkspace a {
+  color: #6366f1;
+  text-decoration: underline;
+  transition: color 0.15s;
+}
+
+.MarkdownWorkspace a:hover {
+  color: #818cf8;
+}

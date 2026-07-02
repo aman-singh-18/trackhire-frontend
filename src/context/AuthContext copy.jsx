@@ -26,29 +26,22 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Login handler
- const login = async (email, password) => {
-  try {
-    const res = await API.post("/auth/login", { email, password });
-    
-    // Only proceed with setting user session if backend returns explicit success
-    if (res.data.success) {
-      const profileRes = await API.get("/auth/profile");
-      setUser(profileRes.data.user);
-      
-      // Return inside the success loop
+  const login = async (email, password) => {
+    try {
+      const res = await API.post("/auth/login", { email, password });
+      if (res.data.success) {
+        // Fetch profile right after login to capture user details
+        const profileRes = await API.get("/auth/profile");
+        setUser(profileRes.data.user);
+      }
       return { success: true, message: res.data.message };
+    } catch (err) {
+      return {
+        success: false,
+        message: err.response?.data?.message || "Login failed",
+      };
     }
-    
-    // Fallback if backend responded with 200 but success was false
-    return { success: false, message: res.data.message || "Login failed" };
-
-  } catch (err) {
-    return {
-      success: false,
-      message: err.response?.data?.message || "Login failed",
-    };
-  }
-};
+  };
 
   // Signup handler
   const signup = async (name, email, password) => {

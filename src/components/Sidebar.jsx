@@ -10,8 +10,9 @@ const Sidebar = () => {
   const links = [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
     { name: "Analytics", path: "/analytics", icon: PieChart }, 
+    { name: "Manage Resumes", path: "/resumes", icon: Layers }, // New separate canvas link view mapping option
     { name: "Add Interview", path: "/add", icon: PlusCircle },
-  ];
+];
 
   return (
     <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between h-screen sticky top-0 text-slate-400 select-none">
